@@ -4,29 +4,63 @@ import courseOverviewModel from "../../models/course/courseOverview.js";
 import courseRequestModel from "../../models/course/courseRequest.js";
 import courseSectionModel from "../../models/course/courseSection.js";
 
+import providerModel from "../../models/provider.js";
+
 export const createCourse = async (req, res) => {
   try {
     const {
       category_id,
-      provider_id,
       course_title,
-      price
+      price,
+      image_url,
+      video_url,
+      description,
+      duration,
+      student,
+      feature
     } = req.body;
 
-    if (!category_id || !provider_id || !course_title || price === undefined) {
-      return res.status(400).send({
+    if (!category_id || !course_title || price === undefined) {
+      return res.status(400).json({
         message: "Missing required fields"
       });
     }
 
-    const newCourse = await courseModel.create(req.body);
+    // LẤY userId từ token
+    const userId = req.user.userId;
 
-    return res.status(201).send({
+    // TÌM provider THEO user_id
+    const provider = await providerModel.findOne({
+      user_id: userId,
+      status: "approved"
+    });
+
+    if (!provider) {
+      return res.status(403).json({
+        message: "Tài khoản chưa được duyệt làm nhà cung cấp!"
+      });
+    }
+
+    // tạo course với provider._id
+    const newCourse = await courseModel.create({
+      category_id,
+      provider_id: provider._id,
+      course_title,
+      price,
+      image_url,
+      video_url,
+      description,
+      duration,
+      student,
+      feature
+    });
+
+    return res.status(201).json({
       message: "Tạo course thành công",
       course: newCourse
     });
   } catch (error) {
-    return res.status(500).send({
+    return res.status(500).json({
       message: error.message
     });
   }
