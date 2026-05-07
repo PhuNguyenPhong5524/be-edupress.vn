@@ -6,10 +6,12 @@ import routerProvider from './routes/provider.js';
 import routerCourse from './routes/course.js';
 import routerLogin from './routes/login.js';
 import routerRegister from "./routes/register.js"
+import cors from "cors";
 
 const app = express();
 const PORT = 8080;
 app.use(express.json());
+app.use(cors());
 
 mongoose.connect(
     `mongodb://127.0.0.1:27017/edupress`

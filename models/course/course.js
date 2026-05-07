@@ -23,6 +23,10 @@ const courseSchema = new mongoose.Schema(
     students: { type: Number, default: 0 },
     duration: String,
     feature: { type: Boolean, default: false },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
   },
   { timestamps: true }
 );

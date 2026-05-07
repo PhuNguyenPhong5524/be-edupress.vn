@@ -120,3 +120,60 @@ export const getCourseById = async (req, res) => {
     });
   }
 };
+
+
+export const getAllCourse = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search } = req.query;
+    const skip = (page - 1) * limit;
+    const filter = {isActive: true};
+
+    if(search){
+      const courses = await courseModel.find({
+        name: { $regex: search.trim(), $options: "i" }
+      }).select("_id");
+
+      filter._id = { $in: courses.map((course) => course._id) };
+    }
+
+    const courses = await courseModel.find(filter)
+      .populate({
+        path: "category_id",
+        select: "cate_name"
+      })
+      .populate({
+        path: "provider_id",
+        select: "provider_name"
+      }).skip(skip).limit(Number(limit));
+
+    const totalCourses = await courseModel.countDocuments(filter);
+
+    const result = courses.map((c) => {
+      return {
+        _id: c._id,
+        category: c.category_id?.cate_name,
+        provider: c.provider_id?.provider_name,
+        course_title: c.course_title,
+        image_url: c.image_url,
+        price: c.price,
+        price_promotion: c.price_promotion,
+        students: c.students,
+        isActive: c.isActive,
+        feature: c.feature
+      };
+    });
+
+    res.status(200).json({
+      message: "Lấy danh sách giáo viên thành công!",
+      data: result,
+      page: Number(page),
+      limit: Number(limit),
+      totalCourses
+    });
+
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message
+    });
+  }
+};
