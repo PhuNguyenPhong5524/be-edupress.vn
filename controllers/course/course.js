@@ -72,50 +72,52 @@ export const getCourseById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Tìm course
-    const course = await courseModel.findById(id);
+    const course = await courseModel
+      .findById(id)
+      .populate("category_id", "cate_name")
+      .populate("provider_id", "provider_name")
+      .lean();
 
     if (!course) {
-      return res.status(404).send({
-        message: "Không tìm thấy khóa học"
+      return res.status(404).json({
+        message: "Không tìm thấy khóa học",
       });
     }
 
-    // 2. Lấy request
-    const requests = await courseRequestModel.find({ course_id: id });
+    const [requests, overviews, sections] = await Promise.all([
+      courseRequestModel.find({ course_id: id }).lean(),
+      courseOverviewModel.find({ course_id: id }).lean(),
+      courseSectionModel.find({ course_id: id }).lean()
+    ]);
 
-    // 3. Lấy overview
-    const overviews = await courseOverviewModel.find({ course_id: id });
+    // Lấy tất cả lectures 1 lần
+    const lectures = await lectureModel.find({
+      section_id: { $in: sections.map(s => s._id) }
+    }).lean();
 
-    // 4. Lấy sections
-    const sections = await courseSectionModel.find({ course_id: id });
+    // Gộp lectures vào section
+    const sectionsWithLectures = sections.map(section => ({
+      ...section,
+      lectures: lectures.filter(l => l.section_id.toString() === section._id.toString())
+    }));
 
-    // 5. Lấy lectures theo section
-    const sectionsWithLectures = await Promise.all(
-      sections.map(async (section) => {
-        const lectures = await lectureModel.find({
-          section_id: section._id
-        });
+    const resultCourse = {
+      ...course,
+      category: course.category_id?.cate_name,
+      provider: course.provider_id?.provider_name,
+      category_id: undefined,
+      provider_id: undefined
+    };
 
-        return {
-          ...section._doc,
-          lectures
-        };
-      })
-    );
-
-    // 6. Trả về full data
-    return res.status(200).send({
-      message: "Lấy chi tiết khóa học thành công",
-      data: {
-        course,
-        request: requests,
-        overview: overviews,
-        sections: sectionsWithLectures
-      }
+    return res.status(200).json({
+      course: resultCourse,
+      requests,
+      overviews,
+      sections: sectionsWithLectures
     });
+
   } catch (error) {
-    return res.status(500).send({
+    return res.status(500).json({
       message: error.message
     });
   }
