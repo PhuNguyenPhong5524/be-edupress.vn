@@ -9,7 +9,10 @@ const lectureSchema = new mongoose.Schema({
   title: String,
   duration: String,
   preview: Boolean,
-  vid_lectures_url: String
+  vid_lectures_url: {
+    type: String,
+    default: null
+  }
 });
 
     const lectureModel = mongoose.model("Lecture", lectureSchema);

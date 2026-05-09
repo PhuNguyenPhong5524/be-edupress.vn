@@ -28,3 +28,16 @@ export const createCategory = async (req, res) => {
 }
 
 
+export const getAllCategory = async (req, res) => {
+    try {
+        const categories = await categoryModel.find();
+        return res.status(200).send({
+            message: "Lấy danh sách danh mục thành công!",
+            categories
+        });
+    } catch (error) {
+        return res.status(500).send({
+            message: error.message
+        });
+    }
+}

@@ -21,7 +21,7 @@ const courseSchema = new mongoose.Schema(
     total_sections: Number,
     total_lectures: Number,
     students: { type: Number, default: 0 },
-    duration: String,
+    duration: { type: String, default: null },
     feature: { type: Boolean, default: false },
     isActive: {
       type: Boolean,

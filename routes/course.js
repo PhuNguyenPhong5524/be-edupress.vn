@@ -1,6 +1,6 @@
 
 import {Router} from "express";
-import { createCourse, getAllCourse, getCourseById } from "../controllers/course/course.js";
+import { createCourse, deleteCourse, getAllCourse, getAllCourseOfProvider, getCourseById } from "../controllers/course/course.js";
 import { createCourseRequest } from "../controllers/course/courseRequest.js";
 import { createCourseOverview } from "../controllers/course/courseOverView.js";
 import { createCourseSection } from "../controllers/course/courseSection.js";
@@ -17,7 +17,14 @@ routerCourse.post("/course-overview", createCourseOverview);
 routerCourse.post("/course-sections", createCourseSection);
 routerCourse.post("/course-lectures", createCourseLecture);
 routerCourse.get("/courses", getAllCourse);
-routerCourse.get("/courses/:id", getCourseById);
+routerCourse.get(
+  "/my-courses",
+  authMiddleware,
+  authorizeRole("provider"),
+  getAllCourseOfProvider
+);
 
+routerCourse.get("/courses/:id", getCourseById);
+routerCourse.delete("/courses/:id", authMiddleware, authorizeRole('provider'), deleteCourse);
 
 export default routerCourse;
