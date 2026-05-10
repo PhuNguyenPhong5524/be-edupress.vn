@@ -43,7 +43,7 @@ export const login = async (req, res) => {
         role: user.role
       },
       ACCESS_SECRET,
-      { expiresIn: "5m" }
+      { expiresIn: "30m" }
     );
 
     // ✅ refresh token (dài hạn)

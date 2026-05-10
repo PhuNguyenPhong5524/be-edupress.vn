@@ -101,11 +101,12 @@ export const getCourseById = async (req, res) => {
 
     const resultCourse = {
       ...course,
-      category: course.category_id?.cate_name,
-      provider: course.provider_id?.provider_name,
-      category_id: undefined,
-      provider_id: undefined
+      category_id: course.category_id?._id,
+      category_name: course.category_id?.cate_name,
+      provider_id: course.provider_id?._id,
+      provider_name: course.provider_id?.provider_name
     };
+
 
     return res.status(200).json({
       course: resultCourse,
@@ -152,7 +153,6 @@ export const getAllCourse = async (req, res) => {
       return {
         _id: c._id,
         category: c.category_id?.cate_name,
-        provider_id: c.provider_id,
         provider: c.provider_id?.provider_name,
         course_title: c.course_title,
         image_url: c.image_url,
@@ -185,7 +185,7 @@ export const getAllCourseOfProvider = async (req, res) => {
     const skip = (page - 1) * limit;
     const userId = req.user.userId; // ✅ từ authMiddleware
 
-    // 1️⃣ Tìm provider theo user đang login
+    // Tìm provider theo user đang login
     const provider = await providerModel.findOne({
       user_id: userId,
       status: "approved",
@@ -197,13 +197,13 @@ export const getAllCourseOfProvider = async (req, res) => {
       });
     }
 
-    // 2️⃣ Filter CHỈ course của provider đó
+    // Filter CHỈ course của provider đó
     const filter = {
       isActive: true,
       provider_id: provider._id,
     };
 
-    // 3️⃣ Search theo tên khóa học
+    // Search theo tên khóa học
     if (search) {
       filter.course_title = {
         $regex: search.trim(),
@@ -211,7 +211,7 @@ export const getAllCourseOfProvider = async (req, res) => {
       };
     }
 
-    // 4️⃣ Query
+    // Query
     const courses = await courseModel
       .find(filter)
       .populate("category_id", "cate_name")
@@ -224,6 +224,7 @@ export const getAllCourseOfProvider = async (req, res) => {
 
     const result = courses.map((c) => ({
       _id: c._id,
+      category_id: c.category_id?._id,
       category: c.category_id?.cate_name,
       provider_id: c.provider_id?._id,
       provider: c.provider_id?.provider_name,
@@ -321,3 +322,82 @@ export const deleteCourse = async (req, res) => {
     });
   }
 };
+
+
+export const UpdateCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      category_id,
+      course_title,
+      price,
+      image_url,
+      video_url,
+      description,
+      duration,
+      feature,
+    } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Thiếu id khóa học",
+      });
+    }
+
+    if (!category_id || !course_title || price === undefined) {
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
+    }
+
+    // lấy userId từ token
+    const userId = req.user.userId;
+
+    // tìm provider theo user
+    const provider = await providerModel.findOne({
+      user_id: userId,
+      status: "approved",
+    });
+
+    if (!provider) {
+      return res.status(403).json({
+        message: "Tài khoản chưa được duyệt làm nhà cung cấp!",
+      });
+    }
+
+    // kiểm tra course tồn tại & thuộc provider này
+    const course = await courseModel.findOne({
+      _id: id,
+      provider_id: provider._id,
+    });
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Không tìm thấy khóa học hoặc không có quyền chỉnh sửa",
+      });
+    }
+
+    // cập nhật
+    course.category_id = category_id;
+    course.course_title = course_title;
+    course.price = price;
+    course.image_url = image_url;
+    course.video_url = video_url || "";
+    course.description = description;
+    course.duration = duration;
+    course.feature = feature ?? course.feature;
+
+    await course.save();
+
+    return res.status(200).json({
+      message: "Cập nhật khóa học thành công",
+      course,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+``

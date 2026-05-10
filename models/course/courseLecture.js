@@ -8,7 +8,10 @@ const lectureSchema = new mongoose.Schema({
   },
   title: String,
   duration: String,
-  preview: Boolean,
+  preview: {
+    type: Boolean,
+    default: false
+  },
   vid_lectures_url: {
     type: String,
     default: null

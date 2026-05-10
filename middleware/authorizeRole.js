@@ -7,7 +7,7 @@ const authorizeRole = (role) => {
     }
     next();
   };
-  // Ví dụ: app.get('/admin', authMiddleware, authorizeRole('provider'), adminController);
+  
 };
 
 export default authorizeRole;
