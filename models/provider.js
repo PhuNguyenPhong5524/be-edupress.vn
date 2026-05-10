@@ -23,8 +23,8 @@ const providerSchema = new mongoose.Schema(
       lowercase: true
     },
     images: {
-      type: [String],
-      default: []
+      type: String,
+      default: null
     },
     status: {
       type: String,

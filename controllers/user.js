@@ -29,3 +29,21 @@ export const createUser = async (req, res) => {
   }
 };
 
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await userModel
+      .find()
+      .select("-password -refreshToken")  
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      total: users.length,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
